@@ -22,9 +22,12 @@ load_dotenv()
 from api.config import get_settings
 from api.providers import orders_provider, places_provider, routes_provider, zones_provider
 from core.alerts.evaluator import ack_alert, list_alerts
+from core.auth import Session, issue_token, verify_token
 from core.clock.demo_clock import apply_action, get_state
 from core.clock.spikes import inject_spike, reset_spikes
+from core.navigation import assignments as nav
 from core.schemas.alerts import AlertAckResponse, AlertOut
+from core.schemas.navigation import AssignmentSummary, RiderSummary, RouteZoneAhead
 from core.schemas.demo import ClockActionRequest, ClockState, DemoResetResponse, SpikeRequest, SpikeResponse
 from core.schemas.orders import OrderAssignRequest, OrderAssignResponse
 from core.schemas.places import PlaceResolveResponse
@@ -74,3 +77,33 @@ def acknowledge_alert(alert_id: str) -> AlertAckResponse:
 
 def using_mocks() -> bool:
     return get_settings().use_mocks
+
+
+def settings():
+    return get_settings()
+
+
+# --- auth -------------------------------------------------------------------
+
+
+def verify_session(token: str | None) -> Session | None:
+    return verify_token(token)
+
+
+def session_token(session: Session) -> str:
+    return issue_token(session)
+
+
+# --- fleet / live navigation (always real: these read what dispatch wrote) ---
+
+
+def list_riders() -> list[RiderSummary]:
+    return nav.list_riders()
+
+
+def active_assignments() -> list[AssignmentSummary]:
+    return nav.active_assignments()
+
+
+def zones_ahead(order_id: str) -> list[RouteZoneAhead]:
+    return nav.zones_ahead(order_id)

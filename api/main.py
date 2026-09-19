@@ -22,7 +22,7 @@ from fastapi.staticfiles import StaticFiles
 
 from api.config import get_settings
 from api.errors import register_error_handlers
-from api.routers import alerts, demo, health, orders, places, push, rider, routes, zones
+from api.routers import alerts, auth, demo, health, navigation, orders, places, push, rider, routes, zones
 
 STATIC_DIR = Path(__file__).parent / "static"
 
@@ -47,6 +47,7 @@ def create_app() -> FastAPI:
 
     register_error_handlers(app)
 
+    app.include_router(auth.router)
     app.include_router(health.router)
     app.include_router(places.router)
     app.include_router(routes.router)
@@ -55,6 +56,7 @@ def create_app() -> FastAPI:
     app.include_router(demo.router)
     app.include_router(alerts.router)
     app.include_router(push.router)
+    app.include_router(navigation.router)
     app.include_router(rider.router)
 
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")

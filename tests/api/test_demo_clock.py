@@ -4,13 +4,20 @@ Hits the live Neo4j configured in .env (per CLAUDE.md, state lives in Neo4j,
 not local files) - these are integration tests, not unit tests.
 """
 
-from datetime import datetime, timezone
-
 from fastapi.testclient import TestClient
 
 from api.main import app
+from tests.helpers import DISPATCHER, RIDER_1, signed_in
 
-client = TestClient(app)
+client = signed_in(DISPATCHER)
+
+
+def test_clock_controls_are_dispatcher_only():
+    assert TestClient(app).get("/api/demo/clock").status_code == 401
+    rider = signed_in(RIDER_1)
+    assert rider.post("/api/demo/clock", json={"action": "pause"}).status_code == 403
+    # riders can still read the replay time
+    assert rider.get("/api/clock").status_code == 200
 
 
 def test_get_clock_returns_bounds_from_real_zone_readings():

@@ -12,7 +12,7 @@ from datetime import timedelta
 
 from core.clock.demo_clock import get_state
 from core.clock.math import floor_to_bucket
-from core.db.client import get_session
+from core.db.client import get_session, to_data_tz
 from core.schemas.demo import DemoResetResponse, SpikeRequest, SpikeResponse
 
 BUCKET_MINUTES = 15
@@ -35,7 +35,7 @@ def inject_spike(req: SpikeRequest) -> SpikeResponse:
                 })
                 """,
                 h3=req.h3,
-                ts=bucket_ts,
+                ts=to_data_tz(bucket_ts),
                 pm25=req.pm25,
                 spike_id=spike_id,
             )

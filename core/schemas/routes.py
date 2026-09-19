@@ -32,6 +32,17 @@ class RouteZoneSegment(BaseModel):
     sensors: list[str] = Field(default_factory=list)
 
 
+class RouteStep(BaseModel):
+    """Turn-by-turn instruction from the Routes API (additive, post-v0)."""
+
+    instruction: str
+    maneuver: str
+    distance_m: float = Field(ge=0)
+    duration_s: float = Field(ge=0)
+    lat: float
+    lng: float
+
+
 class RouteOption(BaseModel):
     id: str
     duration_s: float = Field(ge=0)
@@ -47,6 +58,9 @@ class RouteOption(BaseModel):
     rank: int = Field(ge=1)
     selected: bool
     zones: list[RouteZoneSegment]
+    steps: list[RouteStep] = Field(default_factory=list)
+    label: str | None = None
+    """"Fastest", "Lowest exposure", etc. - additive, post-v0."""
 
 
 class RouteRecommendation(BaseModel):

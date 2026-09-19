@@ -53,6 +53,15 @@ class Settings:
         ]
     )
 
+    # The two front doors link to each other: the login page (API) hands the
+    # dispatcher off to the console, and the console links back to sign out.
+    public_api_url: str = field(
+        default_factory=lambda: os.getenv("PUBLIC_API_URL", "http://127.0.0.1:8010").rstrip("/")
+    )
+    console_url: str = field(
+        default_factory=lambda: os.getenv("CONSOLE_URL", "http://127.0.0.1:8501").rstrip("/")
+    )
+
     def validate(self) -> None:
         """Raise a clear RuntimeError for missing config, called once at startup."""
         missing: list[str] = []
@@ -61,10 +70,10 @@ class Settings:
             missing.append("NEO4J_URI/NEO4J_USERNAME/NEO4J_PASSWORD")
 
         if not self.use_mocks:
+            # Gemini is optional: without it, route explanations fall back to a
+            # template sentence built from the same graph numbers.
             if not self.google_maps_server_key:
                 missing.append("GOOGLE_MAPS_SERVER_KEY (required when USE_MOCKS=false)")
-            if not self.gemini_api_key:
-                missing.append("GEMINI_API_KEY (required when USE_MOCKS=false)")
             if not (self.vapid_public_key and self.vapid_private_key and self.vapid_subject):
                 missing.append("VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY/VAPID_SUBJECT")
 

@@ -13,6 +13,11 @@ from core.schemas.demo import ClockActionRequest, ClockState
 
 CLOCK_ID = "singleton"
 DEFAULT_SPEED = 60
+# 2021-01-27 14:00 IST: 172 of 195 zones reporting (overnight it drops to
+# ~35) at a city mean of ~76 ug/m3 (Moderate). Coverage is high enough for
+# real dose comparisons, and a demo spike visibly crosses the 120 threshold -
+# on the worst days (Jan 14-15, ~300 mean) every zone is already Severe.
+DEMO_START = datetime(2021, 1, 27, 8, 30, tzinfo=timezone.utc)
 
 
 def _compute_bounds(session) -> tuple[datetime, datetime]:
@@ -39,7 +44,7 @@ def _create_clock(session) -> dict:
         RETURN c
         """,
         id=CLOCK_ID,
-        anchor_ts=min_ts,
+        anchor_ts=clamp_to_bounds(DEMO_START, min_ts, max_ts),
         wall_anchor=wall_now,
         speed=DEFAULT_SPEED,
         running=True,
