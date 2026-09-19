@@ -178,7 +178,21 @@ else:
                     travelMode: google.maps.TravelMode.DRIVING,
                   }},
                   (result, status) => {{
-                    if (status === "OK") directionsRenderer.setDirections(result);
+                    if (status === "OK") {{
+                      directionsRenderer.setDirections(result);
+                    }} else {{
+                      // Directions API unavailable for this key/project - fall
+                      // back to a straight line so the map still shows a path
+                      // instead of silently rendering nothing.
+                      new google.maps.Polyline({{
+                        path: [payload.origin, payload.destination],
+                        strokeColor: "#3b82f6",
+                        strokeOpacity: 0.8,
+                        strokeWeight: 3,
+                        map,
+                      }});
+                      console.warn("Directions unavailable (" + status + "); showing a straight-line fallback.");
+                    }}
                   }}
                 );
 

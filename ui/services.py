@@ -12,6 +12,13 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from dotenv import load_dotenv
+
+# Every ui/ page imports this module before touching core/, so this is the
+# one place that guarantees .env is loaded no matter which page Streamlit
+# runs first (unlike api/main.py, `streamlit run` never imports api.main).
+load_dotenv()
+
 from api.config import get_settings
 from api.providers import orders_provider, places_provider, routes_provider, zones_provider
 from core.alerts.evaluator import ack_alert, list_alerts
