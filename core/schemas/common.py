@@ -40,3 +40,20 @@ class ErrorEnvelope(BaseModel):
     """Every non-2xx API response body shape (api/main.py exception handlers)."""
 
     error: ErrorDetail
+
+
+_BAND_BOUNDARIES: list[tuple[float, SeverityBand]] = [
+    (30, "good"),
+    (60, "satisfactory"),
+    (90, "moderate"),
+    (120, "poor"),
+    (250, "very_poor"),
+]
+
+
+def severity_band_for(pm25: float) -> SeverityBand:
+    """PRD severity bands (display heuristics on 15-minute medians), inclusive upper bounds."""
+    for upper, band in _BAND_BOUNDARIES:
+        if pm25 <= upper:
+            return band
+    return "severe"
