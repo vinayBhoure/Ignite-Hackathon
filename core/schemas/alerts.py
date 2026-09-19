@@ -24,6 +24,8 @@ class AlertOut(BaseModel):
     order_id: str | None = None
     rider_id: str | None = None
     h3: str | None = None
+    simulated: bool = False
+    """True when the triggering reading was an injected spike (additive, post-v0)."""
 
 
 class AlertAckResponse(BaseModel):

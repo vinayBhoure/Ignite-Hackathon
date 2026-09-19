@@ -5,3 +5,6 @@ __pycache__/
 venv/
 .cognee_system/
 .cognee_data/
+
+# Raw + cleaned sensor CSVs (~470 MB) - stay local, loaded into Neo4j by the ETL
+dataset/

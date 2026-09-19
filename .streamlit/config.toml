@@ -1,0 +1,30 @@
+# Aevora theme for the dispatcher console - same palette and type as the
+# sign-in page (api/templates/login.html).
+
+[theme]
+base = "dark"
+primaryColor = "#E8A33D"
+backgroundColor = "#15181A"
+secondaryBackgroundColor = "#1C2022"
+textColor = "#ECE9E0"
+linkColor = "#E8A33D"
+borderColor = "#2F3537"
+showWidgetBorder = true
+baseRadius = "10px"
+font = "'Bricolage Grotesque':https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..700&display=swap, 'Segoe UI', sans-serif"
+codeFont = "'IBM Plex Mono':https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap, monospace"
+headingFontWeights = [700, 600, 600]
+greenColor = "#4FD48A"
+orangeColor = "#E8A33D"
+redColor = "#E4553F"
+grayColor = "#8E948F"
+
+[theme.sidebar]
+backgroundColor = "#101314"
+secondaryBackgroundColor = "#1C2022"
+
+[client]
+toolbarMode = "minimal"
+
+[browser]
+gatherUsageStats = false

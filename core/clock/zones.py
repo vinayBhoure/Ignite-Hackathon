@@ -10,7 +10,7 @@ from datetime import datetime
 
 from core.clock.demo_clock import get_state
 from core.clock.math import floor_to_bucket
-from core.db.client import get_session
+from core.db.client import get_session, to_data_tz
 from core.schemas.common import severity_band_for
 from core.schemas.zones import ZoneReadingOut, ZonesResponse
 
@@ -30,7 +30,7 @@ def get_zones(ts: datetime | None = None) -> ZonesResponse:
     bucket = floor_to_bucket(ts, BUCKET_MINUTES)
 
     with get_session() as session:
-        rows = session.run(_QUERY, bucket=bucket)
+        rows = session.run(_QUERY, bucket=to_data_tz(bucket))
         zones = [_to_zone_reading(row["chosen"]) for row in rows]
 
     return ZonesResponse(ts=ts, bucket=f"{bucket.isoformat()}/15m", zones=zones)

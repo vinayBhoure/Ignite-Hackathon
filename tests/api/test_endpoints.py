@@ -52,8 +52,12 @@ def test_zones_with_ts_param():
     assert resp.json()["ts"].startswith("2020-11-01T10:00:00")
 
 
-def test_orders_assign():
-    resp = client.post("/api/orders/order-1/assign", json={"route_id": "r1", "rider_id": "rider-1"})
+def test_orders_assign_requires_dispatcher():
+    assert client.post("/api/orders/order-1/assign", json={"route_id": "r1"}).status_code == 401
+
+
+def test_orders_assign(dispatcher_client):
+    resp = dispatcher_client.post("/api/orders/order-1/assign", json={"route_id": "r1", "rider_id": "rider-1"})
     assert resp.status_code == 200
     body = resp.json()
     assert body["order_id"] == "order-1"

@@ -3,11 +3,10 @@ real core/clock (they don't go through the USE_MOCKS switch, unlike zones).
 """
 
 import h3
-from fastapi.testclient import TestClient
 
-from api.main import app
+from tests.helpers import DISPATCHER, signed_in
 
-client = TestClient(app)
+client = signed_in(DISPATCHER)
 
 TEST_H3 = h3.latlng_to_cell(28.4950, 77.0890, 8)  # Cyber Hub, Gurugram
 

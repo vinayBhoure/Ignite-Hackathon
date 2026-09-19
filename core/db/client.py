@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import os
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Iterator
 
 from neo4j import Driver, GraphDatabase, Session
@@ -30,7 +30,11 @@ def get_driver() -> Driver:
             raise MissingNeo4jConfig(
                 "NEO4J_URI, NEO4J_USERNAME and NEO4J_PASSWORD must all be set (see .env.example)"
             )
-        _driver = GraphDatabase.driver(uri, auth=(user, password))
+        # Only surface real warnings: "unknown property" notices fire on every
+        # poll until an optional property (e.g. Alert.simulated) first exists.
+        _driver = GraphDatabase.driver(
+            uri, auth=(user, password), notifications_disabled_classifications=["UNRECOGNIZED"]
+        )
     return _driver
 
 
@@ -45,6 +49,19 @@ def close_driver() -> None:
     if _driver is not None:
         _driver.close()
         _driver = None
+
+
+# The ETL stored every ZoneReading.ts with a +05:30 offset. Neo4j compares
+# zoned datetimes for *equality* including the offset (10:00+05:30 !=
+# 04:30Z, though ordering works), so any value matched against ts or
+# PASSES_THROUGH.bucket must be sent in this offset or it silently misses.
+DATA_TZ = timezone(timedelta(hours=5, minutes=30))
+
+
+def to_data_tz(value: datetime) -> datetime:
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    return value.astimezone(DATA_TZ)
 
 
 def to_utc(value) -> datetime:

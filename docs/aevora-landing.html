@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aevora — sign in</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600;12..96,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --smog-900:#15181A; --smog-850:#1C2022; --smog-800:#232829; --smog-700:#2F3537;
+  --smog-600:#454C4E; --bone:#ECE9E0; --bone-dim:#8E948F;
+  --lamp:#E8A33D; --clean:#4FD48A;
+  --sev:#A52C24; --vpoor:#E4553F; --sat:#9DC64A;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--smog-900); color:var(--bone);
+  font-family:"Bricolage Grotesque","Segoe UI",Helvetica,Arial,sans-serif;
+  font-size:16px; line-height:1.5; overflow:hidden;
+}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+
+.scene{position:fixed;inset:0;overflow:hidden}
+.backdrop{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+/* darkening scrim so the form stays readable once the scene settles */
+.scrim{
+  position:absolute;inset:0;opacity:0;
+  background:radial-gradient(120% 90% at 50% 46%, rgba(10,12,13,.90) 0%, rgba(10,12,13,.72) 42%, rgba(10,12,13,.30) 100%);
+}
+
+/* ---------- centred brand + form ---------- */
+.center{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:clamp(22px,3.4vh,40px);
+  padding:24px;text-align:center
+}
+.brand{opacity:0}
+.mark{
+  margin:0;font-size:clamp(52px,11vw,132px);line-height:.9;font-weight:700;
+  letter-spacing:-.05em;color:var(--clean);
+  text-shadow:0 0 60px rgba(79,212,138,.30)
+}
+.mark-sub{margin:clamp(6px,1.2vh,14px) 0 0;font-size:clamp(11px,1.3vw,15px);color:var(--bone-dim);letter-spacing:.06em}
+.mark-sub em{font-style:normal;color:var(--clean);font-weight:600}
+
+.card{
+  opacity:0;width:min(400px,100%);text-align:left;
+  background:rgba(28,32,34,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid var(--smog-700);border-radius:14px;padding:26px 26px 22px
+}
+.card h2{margin:0 0 4px;font-size:19px;font-weight:600;letter-spacing:-.02em}
+.card .sub{margin:0 0 20px;font-size:13px;color:var(--bone-dim)}
+.seg{display:flex;border:1px solid var(--smog-600);border-radius:8px;overflow:hidden;margin-bottom:18px}
+.seg button{
+  flex:1;font-family:inherit;font-size:13px;padding:8px;border:0;cursor:pointer;
+  background:transparent;color:var(--bone-dim)
+}
+.seg button[aria-pressed="true"]{background:var(--smog-700);color:var(--bone);font-weight:600}
+.seg button:focus-visible{outline:2px solid var(--lamp);outline-offset:-2px}
+.f{margin-bottom:13px}
+.f label{display:block;font-size:12px;color:var(--bone-dim);margin-bottom:5px}
+.f input{
+  width:100%;font-family:inherit;font-size:14.5px;color:var(--bone);
+  background:var(--smog-850);border:1px solid var(--smog-700);border-radius:8px;padding:10px 12px
+}
+.f input::placeholder{color:#5E6462}
+.f input:focus{outline:2px solid var(--lamp);outline-offset:1px;border-color:var(--smog-600)}
+.submit{
+  width:100%;margin-top:7px;font-family:inherit;font-size:14.5px;font-weight:600;
+  color:#12140F;background:var(--lamp);border:0;border-radius:9px;padding:12px;cursor:pointer
+}
+.submit:hover{filter:brightness(1.06)}
+.submit:focus-visible{outline:2px solid var(--bone);outline-offset:2px}
+.alt{margin:14px 0 0;font-size:12.5px;color:var(--bone-dim);text-align:center}
+.alt a{color:var(--bone);text-decoration:none;box-shadow:inset 0 -1px 0 var(--smog-600)}
+.alt a:hover{box-shadow:inset 0 -1px 0 var(--lamp)}
+
+/* ---------- replay control (no intro text) ---------- */
+.replay-standalone{
+  position:absolute;left:50%;bottom:clamp(20px,4vh,36px);transform:translateX(-50%);
+  opacity:0;z-index:4
+}
+.scene.playing .replay-standalone{animation:fadeIn .7s 6.9s ease-out forwards}
+.scene:not(.playing) .replay-standalone{opacity:1}
+.ghost{
+  font-family:inherit;font-size:12px;color:var(--bone-dim);background:transparent;
+  border:1px solid var(--smog-700);border-radius:6px;padding:6px 14px;cursor:pointer
+}
+.ghost:hover{color:var(--bone);border-color:var(--smog-600)}
+.ghost:focus-visible{outline:2px solid var(--lamp);outline-offset:2px}
+
+.skip{position:absolute;right:clamp(16px,4vw,32px);top:clamp(16px,4vh,30px);z-index:5}
+.scene:not(.playing) .skip{display:none}
+
+/* =================== TIMELINE =================== */
+@keyframes smogOffL{to{transform:translate3d(-62%,-6%,0);opacity:0}}
+@keyframes smogOffR{to{transform:translate3d(62%,-6%,0);opacity:0}}
+@keyframes fadeOut{to{opacity:0}}
+@keyframes fadeIn{to{opacity:1}}
+@keyframes cityIn{from{opacity:.28}to{opacity:1}}
+@keyframes ride{from{transform:translate3d(-420px,0,0)}to{transform:translate3d(1560px,0,0)}}
+@keyframes bob{0%,100%{transform:translateY(0)}25%{transform:translateY(-2px)}60%{transform:translateY(1.5px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes flutter{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(6deg)}}
+@keyframes streak{0%{opacity:0;transform:translateX(30px)}40%{opacity:.5}100%{opacity:0;transform:translateX(-90px)}}
+@keyframes markIn{from{opacity:0;transform:translateY(16px) scale(.94)}to{opacity:1;transform:none}}
+@keyframes cardIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes beamPulse{0%,100%{opacity:.75}50%{opacity:1}}
+
+.playing .sky-smog{animation:fadeOut 2.4s 1.15s ease-in-out forwards}
+.playing .smog-l{animation:smogOffL 2.7s 1.05s cubic-bezier(.36,.02,.2,1) forwards}
+.playing .smog-r{animation:smogOffR 2.7s 1.15s cubic-bezier(.36,.02,.2,1) forwards}
+.playing .smog-mid{animation:smogOffR 2.5s .95s cubic-bezier(.36,.02,.2,1) forwards}
+.playing .city{animation:cityIn 2.2s 1.2s ease-out forwards}
+.playing .rider{animation:ride 4.1s 2.15s cubic-bezier(.34,.02,.32,1) forwards}
+.playing .bob{animation:bob .6s linear infinite}
+.playing .spin{animation:spin .55s linear infinite;transform-box:fill-box;transform-origin:center}
+.playing .tail{animation:flutter .44s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.playing .streaks line{animation:streak .72s linear infinite}
+.playing .streaks line:nth-child(2){animation-delay:.18s}
+.playing .streaks line:nth-child(3){animation-delay:.34s}
+.playing .streaks line:nth-child(4){animation-delay:.1s}
+.playing .beam{animation:beamPulse 1.2s ease-in-out infinite}
+.playing .scrim{animation:fadeIn 1.4s 5.4s ease-out forwards}
+.playing .brand{animation:markIn 1s 5.6s cubic-bezier(.16,.9,.28,1) forwards}
+.playing .card{animation:cardIn .8s 6.6s cubic-bezier(.16,.9,.28,1) forwards}
+
+/* settled / skipped state */
+.scene:not(.playing) .sky-smog,
+.scene:not(.playing) .smog-l,
+.scene:not(.playing) .smog-r,
+.scene:not(.playing) .smog-mid,
+.scene:not(.playing) .rider{opacity:0}
+.scene:not(.playing) .city{opacity:1}
+.scene:not(.playing) .scrim,
+.scene:not(.playing) .brand,
+.scene:not(.playing) .card{opacity:1}
+
+@media(prefers-reduced-motion:reduce){
+  .playing *{animation:none !important}
+  .playing .sky-smog,.playing .smog-l,.playing .smog-r,.playing .smog-mid,
+  .playing .rider{opacity:0}
+  .playing .city,.playing .scrim,.playing .brand,.playing .card{opacity:1}
+}
+
+@media(max-width:560px){
+  .card{padding:22px 20px 18px}
+}
+</style>
+</head>
+<body>
+
+<div class="scene playing" id="scene">
+
+  <svg class="backdrop" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <defs>
+      <linearGradient id="skyClean" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#121B20"/><stop offset=".62" stop-color="#1B2629"/><stop offset="1" stop-color="#26302E"/>
+      </linearGradient>
+      <linearGradient id="skySmogG" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#5B4B36"/><stop offset=".5" stop-color="#72603F"/><stop offset="1" stop-color="#453A2D"/>
+      </linearGradient>
+      <radialGradient id="glow" cx=".5" cy=".5" r=".5">
+        <stop offset="0" stop-color="#E8A33D" stop-opacity=".55"/><stop offset="1" stop-color="#E8A33D" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="beamG" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#E8A33D" stop-opacity=".55"/><stop offset="1" stop-color="#E8A33D" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="bodyG" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#E4E7E1"/><stop offset="1" stop-color="#A7ADA7"/>
+      </linearGradient>
+      <linearGradient id="boxG" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#63E39A"/><stop offset="1" stop-color="#31A86A"/>
+      </linearGradient>
+      <filter id="fogBig" x="-70%" y="-70%" width="240%" height="240%"><feGaussianBlur stdDeviation="52"/></filter>
+      <filter id="fogMid" x="-70%" y="-70%" width="240%" height="240%"><feGaussianBlur stdDeviation="30"/></filter>
+    </defs>
+
+    <!-- sky -->
+    <rect width="1600" height="900" fill="url(#skyClean)"/>
+    <rect class="sky-smog" width="1600" height="900" fill="url(#skySmogG)"/>
+
+    <!-- skyline -->
+    <g class="city" opacity="1">
+      <g fill="#0B0F10">
+        <rect x="-10" y="520" width="118" height="200"/>
+        <rect x="118" y="452" width="70" height="268"/>
+        <rect x="200" y="556" width="100" height="164"/>
+        <rect x="312" y="410" width="58" height="310"/>
+        <rect x="330" y="378" width="20" height="34"/><rect x="316" y="352" width="48" height="28" rx="5"/>
+        <rect x="384" y="534" width="128" height="186"/>
+        <rect x="524" y="440" width="54" height="280"/>
+        <rect x="590" y="496" width="92" height="224"/>
+        <rect x="694" y="392" width="46" height="328"/>
+        <rect x="752" y="528" width="118" height="192"/>
+        <rect x="882" y="464" width="62" height="256"/>
+        <rect x="956" y="558" width="96" height="162"/>
+        <rect x="1064" y="332" width="30" height="388"/>
+        <rect x="1056" y="322" width="46" height="14" rx="4"/>
+        <rect x="1116" y="506" width="82" height="214"/>
+        <rect x="1210" y="432" width="56" height="288"/>
+        <rect x="1278" y="544" width="120" height="176"/>
+        <rect x="1410" y="470" width="64" height="250"/>
+        <rect x="1486" y="540" width="130" height="180"/>
+      </g>
+      <g fill="#E8A33D" opacity=".42">
+        <rect x="134" y="476" width="8" height="12"/><rect x="158" y="510" width="8" height="12"/>
+        <rect x="134" y="546" width="8" height="12"/><rect x="326" y="436" width="8" height="12"/>
+        <rect x="346" y="490" width="8" height="12"/><rect x="536" y="468" width="8" height="12"/>
+        <rect x="536" y="524" width="8" height="12"/><rect x="706" y="424" width="8" height="12"/>
+        <rect x="720" y="482" width="8" height="12"/><rect x="894" y="492" width="8" height="12"/>
+        <rect x="918" y="540" width="8" height="12"/><rect x="1222" y="462" width="8" height="12"/>
+        <rect x="1240" y="516" width="8" height="12"/><rect x="1422" y="500" width="8" height="12"/>
+        <rect x="1444" y="556" width="8" height="12"/>
+      </g>
+    </g>
+
+    <!-- road -->
+    <rect y="718" width="1600" height="182" fill="#0E1113"/>
+    <rect y="716" width="1600" height="3" fill="#252B2C"/>
+    <rect y="742" width="1600" height="1.5" fill="#1C2122"/>
+    <g fill="#333A38">
+      <rect x="20" y="836" width="78" height="4"/><rect x="170" y="836" width="78" height="4"/>
+      <rect x="320" y="836" width="78" height="4"/><rect x="470" y="836" width="78" height="4"/>
+      <rect x="620" y="836" width="78" height="4"/><rect x="770" y="836" width="78" height="4"/>
+      <rect x="920" y="836" width="78" height="4"/><rect x="1070" y="836" width="78" height="4"/>
+      <rect x="1220" y="836" width="78" height="4"/><rect x="1370" y="836" width="78" height="4"/>
+      <rect x="1520" y="836" width="78" height="4"/>
+    </g>
+
+    <!-- streetlamps -->
+    <g stroke="#171B1C" stroke-width="7" fill="none" stroke-linecap="round">
+      <path d="M260 718 L260 528 L306 528"/>
+      <path d="M900 718 L900 506 L946 506"/>
+      <path d="M1450 718 L1450 534 L1496 534"/>
+    </g>
+    <circle cx="312" cy="529" r="76" fill="url(#glow)"/>
+    <circle cx="952" cy="507" r="84" fill="url(#glow)"/>
+    <circle cx="1502" cy="535" r="72" fill="url(#glow)"/>
+
+    <!-- ================= RIDER ================= -->
+    <g class="rider">
+      <g transform="translate(-40 660) scale(1.15)">
+        <g class="bob">
+
+          <!-- ground shadow -->
+          <ellipse cx="148" cy="196" rx="128" ry="9" fill="#000" opacity=".5"/>
+
+          <!-- motion streaks behind -->
+          <g class="streaks" stroke="#ECE9E0" stroke-linecap="round" fill="none">
+            <line x1="-150" y1="66" x2="-34" y2="66" stroke-width="3"/>
+            <line x1="-200" y1="108" x2="-56" y2="108" stroke-width="2.5"/>
+            <line x1="-120" y1="146" x2="-26" y2="146" stroke-width="2"/>
+            <line x1="-238" y1="42" x2="-128" y2="42" stroke-width="2"/>
+          </g>
+
+          <!-- REAR WHEEL -->
+          <g transform="translate(64 160)">
+            <circle r="31" fill="#101314"/>
+            <circle r="31" fill="none" stroke="#070909" stroke-width="2"/>
+            <g class="spin">
+              <circle r="19" fill="#39403F"/>
+              <circle r="19" fill="none" stroke="#727A79" stroke-width="2.2"/>
+              <g stroke="#727A79" stroke-width="3.2" stroke-linecap="round">
+                <line x1="0" y1="-17" x2="0" y2="17"/>
+                <line x1="-14.7" y1="-8.5" x2="14.7" y2="8.5"/>
+                <line x1="-14.7" y1="8.5" x2="14.7" y2="-8.5"/>
+              </g>
+              <circle r="5" fill="#A2AAA8"/>
+            </g>
+          </g>
+
+          <!-- FRONT WHEEL -->
+          <g transform="translate(232 160)">
+            <circle r="31" fill="#101314"/>
+            <circle r="31" fill="none" stroke="#070909" stroke-width="2"/>
+            <g class="spin">
+              <circle r="19" fill="#39403F"/>
+              <circle r="19" fill="none" stroke="#727A79" stroke-width="2.2"/>
+              <g stroke="#727A79" stroke-width="3.2" stroke-linecap="round">
+                <line x1="0" y1="-17" x2="0" y2="17"/>
+                <line x1="-14.7" y1="-8.5" x2="14.7" y2="8.5"/>
+                <line x1="-14.7" y1="8.5" x2="14.7" y2="-8.5"/>
+              </g>
+              <circle r="5" fill="#A2AAA8"/>
+            </g>
+          </g>
+
+          <!-- exhaust puff -->
+          <ellipse cx="18" cy="150" rx="16" ry="7" fill="#8E948F" opacity=".22"/>
+          <ellipse cx="-4" cy="145" rx="11" ry="5" fill="#8E948F" opacity=".12"/>
+
+          <!-- DELIVERY BOX on rear rack -->
+          <g>
+            <rect x="8" y="30" width="84" height="68" rx="9" fill="url(#boxG)"/>
+            <rect x="8" y="30" width="84" height="68" rx="9" fill="none" stroke="#1E7A4C" stroke-width="2"/>
+            <rect x="8" y="86" width="84" height="12" rx="4" fill="#1E7A4C" opacity=".45"/>
+            <rect x="20" y="46" width="44" height="5" rx="2.5" fill="#0F3D26" opacity=".5"/>
+            <rect x="20" y="58" width="28" height="5" rx="2.5" fill="#0F3D26" opacity=".5"/>
+            <path d="M28 98 L34 112 M76 98 L70 112" stroke="#3A4143" stroke-width="5" stroke-linecap="round"/>
+          </g>
+
+          <!-- SCOOTER BODY -->
+          <!-- rear cowl / engine housing -->
+          <path d="M34 152 C20 152 20 126 34 116 C46 107 62 106 76 106 L156 106 L166 152 Z" fill="url(#bodyG)"/>
+          <path d="M34 152 C20 152 20 126 34 116 C46 107 62 106 76 106 L156 106 L166 152 Z" fill="none" stroke="#7E8582" stroke-width="1.6"/>
+          <!-- rear light -->
+          <rect x="22" y="120" width="12" height="16" rx="4" fill="#E4553F"/>
+          <!-- seat -->
+          <path d="M66 108 L156 108 L156 98 C156 91 151 88 143 88 L84 88 C73 88 66 93 66 102 Z" fill="#1A1E1F"/>
+          <path d="M70 97 L152 97" stroke="#3A4143" stroke-width="1.6"/>
+          <!-- floorboard -->
+          <path d="M156 138 L206 138 L206 154 L156 154 Z" fill="#8E9591"/>
+          <path d="M158 141 L204 141" stroke="#6A716E" stroke-width="1.4"/>
+          <!-- front apron / leg shield -->
+          <path d="M200 156 L200 136 C200 110 208 84 224 64 L252 82 C240 102 236 124 236 144 L236 156 Z" fill="url(#bodyG)"/>
+          <path d="M200 156 L200 136 C200 110 208 84 224 64 L252 82 C240 102 236 124 236 144 L236 156 Z" fill="none" stroke="#7E8582" stroke-width="1.6"/>
+          <!-- front fork -->
+          <path d="M240 96 L236 160" stroke="#4A5150" stroke-width="7" stroke-linecap="round"/>
+          <!-- front fender -->
+          <path d="M204 132 A 36 36 0 0 1 262 128 L 254 138 A 27 27 0 0 0 211 141 Z" fill="#C9CEC8"/>
+          <!-- headlight + beam -->
+          <path class="beam" d="M254 86 L420 58 L420 122 L254 108 Z" fill="url(#beamG)"/>
+          <ellipse cx="250" cy="90" rx="10" ry="13" transform="rotate(14 250 90)" fill="#F6D79A"/>
+          <ellipse cx="250" cy="90" rx="5" ry="7" transform="rotate(14 250 90)" fill="#FFF3D6"/>
+          <!-- handlebar + mirror -->
+          <path d="M224 64 L216 50" stroke="#4A5150" stroke-width="7" stroke-linecap="round"/>
+          <path d="M206 46 L236 54" stroke="#3A4143" stroke-width="9" stroke-linecap="round"/>
+          <path d="M230 50 L242 26" stroke="#3A4143" stroke-width="3.5" stroke-linecap="round"/>
+          <ellipse cx="245" cy="22" rx="9" ry="6" transform="rotate(-18 245 22)" fill="#525A58"/>
+
+          <!-- ================= RIDER FIGURE ================= -->
+          <!-- far leg (behind body) -->
+          <path d="M120 96 L176 112" stroke="#242A28" stroke-width="15" stroke-linecap="round"/>
+          <!-- jacket tail flutter -->
+          <path class="tail" d="M112 68 L86 78 L94 96 L118 90 Z" fill="#2B342E"/>
+          <!-- torso -->
+          <path d="M116 92 L140 60 L158 44" stroke="#38423B" stroke-width="27" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <path d="M122 86 L144 58" stroke="#4B574D" stroke-width="7" stroke-linecap="round" opacity=".8"/>
+          <!-- hi-vis band across back -->
+          <path d="M126 80 L148 52" stroke="#4FD48A" stroke-width="6" stroke-linecap="round"/>
+          <!-- near leg -->
+          <path d="M122 94 L178 110" stroke="#2A302E" stroke-width="17" stroke-linecap="round"/>
+          <path d="M178 110 L186 142" stroke="#2A302E" stroke-width="14" stroke-linecap="round"/>
+          <path d="M178 144 L200 148" stroke="#131615" stroke-width="12" stroke-linecap="round"/>
+          <!-- face (drawn before helmet) -->
+          <circle cx="182" cy="34" r="15" fill="#D8A273"/>
+          <!-- neck -->
+          <path d="M160 44 L172 34" stroke="#C08F63" stroke-width="12" stroke-linecap="round"/>
+          <!-- jacket collar -->
+          <path d="M150 50 L166 38 L172 48 L158 58 Z" fill="#2B342E"/>
+          <!-- N95 mask -->
+          <path d="M182 36 Q197 33 199 43 Q198 55 182 53 Z" fill="#F2F4F0"/>
+          <path d="M183 44 Q192 42 198 43" stroke="#B8BEBA" stroke-width="1.6" fill="none"/>
+          <path d="M183 38 Q192 36 198 38" stroke="#D3D8D4" stroke-width="1.4" fill="none"/>
+          <path d="M182 37 L168 33" stroke="#DDE2DE" stroke-width="2.4" stroke-linecap="round"/>
+          <path d="M182 52 L169 45" stroke="#DDE2DE" stroke-width="2.4" stroke-linecap="round"/>
+          <!-- helmet -->
+          <path d="M160 36 C158 14 180 2 196 12 C205 18 207 30 205 38 C196 30 176 28 160 36 Z" fill="#ECE9E0"/>
+          <path d="M160 36 C158 14 180 2 196 12 C205 18 207 30 205 38 C196 30 176 28 160 36 Z" fill="none" stroke="#B9B6AC" stroke-width="1.4"/>
+          <path d="M165 22 C173 10 188 8 197 15" stroke="#2F3436" stroke-width="5" fill="none" stroke-linecap="round"/>
+          <!-- visor peak -->
+          <path d="M199 22 L222 16 L222 24 L201 31 Z" fill="#2F3436"/>
+          <!-- chin strap -->
+          <path d="M168 40 L174 52" stroke="#2F3436" stroke-width="2.6" stroke-linecap="round"/>
+          <!-- arm: upper, forearm, glove -->
+          <path d="M156 48 L184 62" stroke="#38423B" stroke-width="16" stroke-linecap="round"/>
+          <path d="M184 62 L216 54" stroke="#38423B" stroke-width="14" stroke-linecap="round"/>
+          <path d="M210 55 L222 52" stroke="#4FD48A" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="224" cy="51" r="8" fill="#181C1B"/>
+
+        </g>
+      </g>
+    </g>
+  </svg>
+
+  <div class="scrim"></div>
+
+<button class="ghost skip" id="skip" type="button">Skip</button>
+
+  <div class="center">
+    <div class="brand">
+      <h1 class="mark">Aevora</h1>
+      <p class="mark-sub">Powered by <em>Neo4j</em></p>
+    </div>
+
+    <div class="card">
+      <h2>Sign in</h2>
+      <p class="sub">Route your riders around the worst air in NCR.</p>
+
+      <div class="seg" role="group" aria-label="Account type">
+        <button type="button" id="tabDispatch" aria-pressed="true">Dispatcher</button>
+        <button type="button" id="tabRider" aria-pressed="false">Rider</button>
+      </div>
+
+      <div class="f">
+        <label for="who" id="whoLabel">Work email</label>
+        <input id="who" type="email" autocomplete="username" placeholder="you@company.in">
+      </div>
+      <div class="f">
+        <label for="pw">Password</label>
+        <input id="pw" type="password" autocomplete="current-password" placeholder="••••••••">
+      </div>
+      <button class="submit" type="button">Sign in</button>
+      <p class="alt">Lost your password? <a href="#">Reset it</a></p>
+    </div>
+  </div>
+
+  <button class="ghost replay-standalone" id="replay" type="button">Replay intro</button>
+
+</div>
+
+<script>
+(function(){
+  var scene = document.getElementById('scene');
+  var timer;
+  function settle(ms){ clearTimeout(timer); timer = setTimeout(function(){ scene.classList.remove('playing'); }, ms); }
+  settle(8100);
+
+  document.getElementById('skip').addEventListener('click', function(){
+    clearTimeout(timer); scene.classList.remove('playing');
+  });
+  document.getElementById('replay').addEventListener('click', function(){
+    scene.classList.remove('playing'); void scene.offsetWidth; scene.classList.add('playing'); settle(8100);
+  });
+
+  var d = document.getElementById('tabDispatch'), r = document.getElementById('tabRider');
+  var who = document.getElementById('who'), lab = document.getElementById('whoLabel');
+  d.addEventListener('click', function(){
+    d.setAttribute('aria-pressed','true'); r.setAttribute('aria-pressed','false');
+    lab.textContent = 'Work email'; who.type='email'; who.placeholder='you@company.in';
+  });
+  r.addEventListener('click', function(){
+    r.setAttribute('aria-pressed','true'); d.setAttribute('aria-pressed','false');
+    lab.textContent = 'Phone number'; who.type='tel'; who.placeholder='+91 ';
+  });
+})();
+</script>
+</body>
+</html>

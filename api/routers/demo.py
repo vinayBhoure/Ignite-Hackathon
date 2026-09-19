@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
+from api.security import require_dispatcher
 from core.clock.demo_clock import apply_action, get_state
 from core.clock.spikes import inject_spike, reset_spikes
 from core.schemas.demo import ClockActionRequest, ClockState, DemoResetResponse, SpikeRequest, SpikeResponse
 
-router = APIRouter(prefix="/api/demo")
+router = APIRouter(prefix="/api/demo", dependencies=[Depends(require_dispatcher)])
 
 
 @router.get("/clock", response_model=ClockState)

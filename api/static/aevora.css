@@ -1,0 +1,91 @@
+/* Aevora rider app - same palette and type as the sign-in page. */
+:root{
+  --smog-950:#101314; --smog-900:#15181A; --smog-850:#1C2022; --smog-800:#232829; --smog-700:#2F3537;
+  --smog-600:#454C4E; --bone:#ECE9E0; --bone-dim:#8E948F;
+  --lamp:#E8A33D; --clean:#4FD48A; --sev:#A52C24; --vpoor:#E4553F; --sat:#9DC64A; --mod:#E8C23D;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--smog-900);color:var(--bone);font:15px/1.5 "Bricolage Grotesque","Segoe UI",Helvetica,Arial,sans-serif}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+a{color:var(--lamp)}
+button{font-family:inherit}
+.muted{color:var(--bone-dim);font-size:13px}
+
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;
+     border-bottom:1px solid var(--smog-700);background:var(--smog-950)}
+.brand{font-weight:700;font-size:22px;letter-spacing:-.05em;color:var(--clean);text-decoration:none;
+       text-shadow:0 0 24px rgba(79,212,138,.25)}
+.who{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--bone-dim)}
+.who b{color:var(--bone);font-weight:600}
+.who a{font-size:12.5px;color:var(--bone-dim);text-decoration:none;border:1px solid var(--smog-700);
+       border-radius:6px;padding:4px 10px}
+.who a:hover{color:var(--bone);border-color:var(--smog-600)}
+
+.wrap{max-width:560px;margin:0 auto;padding:16px}
+.replay{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--bone-dim);margin-bottom:14px}
+.chip{display:inline-block;border-radius:999px;padding:2px 9px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.chip.replay{background:rgba(232,163,61,.14);color:var(--lamp);border:1px solid rgba(232,163,61,.35)}
+.chip.live{background:rgba(79,212,138,.12);color:var(--clean)}
+.chip.sim{background:rgba(232,163,61,.16);color:var(--lamp)}
+.chip.low{background:rgba(142,148,143,.16);color:var(--bone-dim)}
+.chip.high{background:rgba(79,212,138,.12);color:var(--clean)}
+
+h1{font-size:24px;letter-spacing:-.03em;margin:4px 0 2px}
+h2{font-size:16px;letter-spacing:-.01em;margin:22px 0 10px}
+.card{background:var(--smog-850);border:1px solid var(--smog-700);border-radius:14px;padding:14px 16px;margin-bottom:10px}
+.card.active{border-color:rgba(79,212,138,.5)}
+.card .route{font-weight:600;font-size:16px}
+.card .meta{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--bone-dim);margin-top:6px}
+.card .meta b{color:var(--bone);font-family:"IBM Plex Mono",monospace;font-weight:500}
+.bar{height:6px;background:var(--smog-700);border-radius:99px;overflow:hidden;margin-top:10px}
+.bar i{display:block;height:100%;background:var(--clean);border-radius:99px;transition:width .6s ease}
+.btn{display:inline-block;border:0;border-radius:10px;padding:11px 16px;font-size:14.5px;font-weight:600;
+     cursor:pointer;text-decoration:none;text-align:center}
+.btn.primary{background:var(--lamp);color:#12140F}
+.btn.clean{background:var(--clean);color:#0C1A12}
+.btn.ghost{background:transparent;color:var(--bone);border:1px solid var(--smog-600)}
+.btn.block{display:block;width:100%}
+.btn:focus-visible{outline:2px solid var(--bone);outline-offset:2px}
+.btn[disabled]{opacity:.55;cursor:progress}
+.alert{border-left:3px solid var(--vpoor);background:var(--smog-850);border-radius:10px;padding:10px 12px;
+       margin-bottom:8px;font-size:13.5px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.alert button{font-size:12px;padding:6px 10px}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:11.5px;color:var(--bone-dim);margin-top:4px}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.empty{text-align:center;padding:30px 16px;color:var(--bone-dim)}
+.empty b{display:block;color:var(--bone);font-size:16px;margin-bottom:4px}
+.note{font-size:12px;color:var(--bone-dim);margin-top:22px;line-height:1.55}
+
+/* ---------------- navigation screen ---------------- */
+body.nav{overflow:hidden}
+.navshell{position:fixed;inset:0;display:flex;flex-direction:column}
+.navshell .top{flex:0 0 auto}
+#map{flex:1 1 auto;min-height:200px}
+.turn{position:absolute;left:12px;right:12px;top:70px;z-index:5;background:rgba(21,24,26,.94);
+      border:1px solid var(--smog-700);border-radius:14px;padding:12px 14px;display:flex;gap:14px;align-items:center;
+      box-shadow:0 8px 28px rgba(0,0,0,.35)}
+.turn .arrow{flex:0 0 52px;height:52px;border-radius:12px;background:var(--clean);color:#0C1A12;
+             display:grid;place-items:center;font-size:30px;font-weight:700}
+.turn .dist{font-family:"IBM Plex Mono",monospace;font-size:22px;font-weight:600;line-height:1.1}
+.turn .text{font-size:14.5px;line-height:1.3;margin-top:2px}
+.spike{position:absolute;left:12px;right:12px;top:156px;z-index:6;display:none;background:rgba(58,20,17,.96);
+       border:1px solid var(--vpoor);border-radius:14px;padding:12px 14px}
+.spike b{color:#FFB4A8}
+.spike .row{display:flex;gap:8px;margin-top:10px}
+.sheet{flex:0 0 auto;background:var(--smog-950);border-top:1px solid var(--smog-700);padding:12px 16px 16px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stat .v{font-family:"IBM Plex Mono",monospace;font-size:18px;font-weight:600}
+.stat .l{font-size:11px;color:var(--bone-dim)}
+.stat .v.bad{color:var(--vpoor)} .stat .v.good{color:var(--clean)}
+.sheet .foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--bone-dim);flex-wrap:wrap}
+.ahead{margin-top:8px;font-size:13px}
+.modal{position:fixed;inset:0;background:rgba(10,12,13,.72);display:none;align-items:flex-end;justify-content:center;z-index:20}
+.modal .box{width:min(560px,100%);background:var(--smog-850);border:1px solid var(--smog-700);border-radius:18px 18px 0 0;padding:18px 18px 22px}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.cmp div{background:var(--smog-900);border:1px solid var(--smog-700);border-radius:12px;padding:10px 12px}
+.cmp div.best{border-color:rgba(79,212,138,.55)}
+.cmp .v{font-family:"IBM Plex Mono",monospace;font-size:18px;font-weight:600}
+.arrived{position:absolute;inset:auto 12px 190px 12px;z-index:6;display:none;background:rgba(15,40,27,.96);
+         border:1px solid var(--clean);border-radius:14px;padding:14px;text-align:center}
+@media(min-width:900px){ .turn,.spike{right:auto;width:420px} .arrived{right:auto;width:420px} }
