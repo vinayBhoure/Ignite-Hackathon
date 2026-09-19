@@ -1,0 +1,9 @@
+{
+  "name": "Exposure-Aware Fleet Routing - Rider",
+  "short_name": "Rider",
+  "start_url": "/rider",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#0b1220",
+  "icons": []
+}
