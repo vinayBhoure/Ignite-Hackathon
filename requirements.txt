@@ -4,3 +4,12 @@ neo4j
 cognee
 fastapi
 uvicorn
+
+# --- Track B: API + UI (Exposure-Aware Fleet Routing) ---
+pydantic
+streamlit
+googlemaps
+google-generativeai
+h3
+pywebpush
+pytest
