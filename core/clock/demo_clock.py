@@ -8,27 +8,18 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from core.clock.math import clamp_speed, clamp_to_bounds, derive_now
-from core.db.client import get_session
+from core.db.client import get_session, to_utc
 from core.schemas.demo import ClockActionRequest, ClockState
 
 CLOCK_ID = "singleton"
 DEFAULT_SPEED = 60
 
 
-def _to_utc(value) -> datetime:
-    """neo4j.time.DateTime (or a plain datetime) -> tz-aware UTC datetime."""
-    if hasattr(value, "to_native"):
-        value = value.to_native()
-    if value.tzinfo is None:
-        value = value.replace(tzinfo=timezone.utc)
-    return value.astimezone(timezone.utc)
-
-
 def _compute_bounds(session) -> tuple[datetime, datetime]:
     record = session.run(
         "MATCH (z:ZoneReading) RETURN min(z.ts) AS min_ts, max(z.ts) AS max_ts"
     ).single()
-    return _to_utc(record["min_ts"]), _to_utc(record["max_ts"])
+    return to_utc(record["min_ts"]), to_utc(record["max_ts"])
 
 
 def _read_clock(session) -> dict | None:
@@ -59,10 +50,10 @@ def _create_clock(session) -> dict:
 
 
 def _state_from_row(clock: dict) -> ClockState:
-    anchor_ts = _to_utc(clock["anchor_ts"])
-    wall_anchor = _to_utc(clock["wall_anchor"])
-    min_ts = _to_utc(clock["min_ts"])
-    max_ts = _to_utc(clock["max_ts"])
+    anchor_ts = to_utc(clock["anchor_ts"])
+    wall_anchor = to_utc(clock["wall_anchor"])
+    min_ts = to_utc(clock["min_ts"])
+    max_ts = to_utc(clock["max_ts"])
     now_ts = derive_now(anchor_ts, clock["speed"], wall_anchor, datetime.now(timezone.utc), clock["running"])
     return ClockState(
         now_ts=now_ts,
@@ -83,12 +74,12 @@ def apply_action(action: ClockActionRequest) -> ClockState:
     with get_session() as session:
         clock = _read_clock(session) or _create_clock(session)
 
-        anchor_ts = _to_utc(clock["anchor_ts"])
-        wall_anchor = _to_utc(clock["wall_anchor"])
+        anchor_ts = to_utc(clock["anchor_ts"])
+        wall_anchor = to_utc(clock["wall_anchor"])
         speed = clock["speed"]
         running = clock["running"]
-        min_ts = _to_utc(clock["min_ts"])
-        max_ts = _to_utc(clock["max_ts"])
+        min_ts = to_utc(clock["min_ts"])
+        max_ts = to_utc(clock["max_ts"])
         wall_now = datetime.now(timezone.utc)
 
         current_now = derive_now(anchor_ts, speed, wall_anchor, wall_now, running)
@@ -104,7 +95,7 @@ def apply_action(action: ClockActionRequest) -> ClockState:
         elif action.action == "jump":
             if action.to is None:
                 raise ValueError("to is required for action=jump")
-            new_anchor = clamp_to_bounds(_to_utc(action.to), min_ts, max_ts)
+            new_anchor = clamp_to_bounds(to_utc(action.to), min_ts, max_ts)
             new_speed, new_running = speed, running
         else:  # pragma: no cover - ClockActionType already restricts this
             raise ValueError(f"unknown action {action.action}")

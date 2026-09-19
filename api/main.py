@@ -19,7 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from api.config import get_settings
 from api.errors import register_error_handlers
-from api.routers import demo, health, orders, places, routes, zones
+from api.routers import alerts, demo, health, orders, places, routes, zones
 
 
 @asynccontextmanager
@@ -48,6 +48,7 @@ def create_app() -> FastAPI:
     app.include_router(zones.router)
     app.include_router(orders.router)
     app.include_router(demo.router)
+    app.include_router(alerts.router)
 
     return app
 

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 from contextlib import contextmanager
+from datetime import datetime, timezone
 from typing import Iterator
 
 from neo4j import Driver, GraphDatabase, Session
@@ -44,3 +45,16 @@ def close_driver() -> None:
     if _driver is not None:
         _driver.close()
         _driver = None
+
+
+def to_utc(value) -> datetime:
+    """neo4j.time.DateTime (or a plain datetime) -> tz-aware UTC datetime.
+
+    Pydantic rejects neo4j's own temporal type, so every value read back from
+    a ts-typed property must pass through this before going into a schema.
+    """
+    if hasattr(value, "to_native"):
+        value = value.to_native()
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
