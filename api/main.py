@@ -9,6 +9,7 @@ Run: uvicorn api.main:app --reload --port 8000
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from dotenv import load_dotenv
 
@@ -16,10 +17,13 @@ load_dotenv()
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 
 from api.config import get_settings
 from api.errors import register_error_handlers
-from api.routers import alerts, demo, health, orders, places, routes, zones
+from api.routers import alerts, demo, health, orders, places, push, routes, zones
+
+STATIC_DIR = Path(__file__).parent / "static"
 
 
 @asynccontextmanager
@@ -49,6 +53,18 @@ def create_app() -> FastAPI:
     app.include_router(orders.router)
     app.include_router(demo.router)
     app.include_router(alerts.router)
+    app.include_router(push.router)
+
+    @app.get("/sw.js", include_in_schema=False)
+    def service_worker() -> FileResponse:
+        # Must be served from site root (not /static/sw.js): a service
+        # worker's scope is its own path and below, so the rider app's push
+        # notifications need it at "/", not under a subpath.
+        return FileResponse(
+            STATIC_DIR / "sw.js",
+            media_type="application/javascript",
+            headers={"Cache-Control": "no-cache"},
+        )
 
     return app
 
