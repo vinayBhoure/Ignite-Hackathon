@@ -1,0 +1,6 @@
+python-dotenv
+tavily-python
+neo4j
+cognee
+fastapi
+uvicorn

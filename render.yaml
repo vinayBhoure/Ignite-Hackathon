@@ -1,0 +1,21 @@
+# Render deployment blueprint (Infra-as-Code)
+# Push this repo to GitHub, then in Render: New -> Blueprint -> point at the repo.
+# Docs: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: ignite-hackathon
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: TAVILY_API_KEY
+        sync: false
+      - key: NEO4J_URI
+        sync: false
+      - key: NEO4J_USERNAME
+        sync: false
+      - key: NEO4J_PASSWORD
+        sync: false
+      - key: LLM_API_KEY
+        sync: false
