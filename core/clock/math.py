@@ -30,3 +30,9 @@ def clamp_speed(speed: int) -> int:
 
 def clamp_to_bounds(ts: datetime, min_ts: datetime, max_ts: datetime) -> datetime:
     return max(min_ts, min(max_ts, ts))
+
+
+def floor_to_bucket(ts: datetime, bucket_minutes: int = 15) -> datetime:
+    """ZoneReading rows are keyed by 15-minute bucket, per CLAUDE.md domain facts."""
+    minute = (ts.minute // bucket_minutes) * bucket_minutes
+    return ts.replace(minute=minute, second=0, microsecond=0)

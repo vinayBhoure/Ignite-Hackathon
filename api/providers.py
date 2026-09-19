@@ -33,11 +33,17 @@ def routes_provider(settings: Settings) -> Callable[[RoutePlanRequest], RoutePla
 
 
 def zones_provider(settings: Settings) -> Callable[..., ZonesResponse]:
+    """Unlike the other providers, the real path here isn't blocked on Track A:
+    core/clock/zones.py just reads already-scored ZoneReading nodes. USE_MOCKS
+    still gates it so zones work offline / without hitting AuraDB when needed.
+    """
     if settings.use_mocks:
         from api.mocks.zones import get_zones
 
         return get_zones
-    raise NotImplementedError("core.exposure is not built yet (Track A) - set USE_MOCKS=true")
+    from core.clock.zones import get_zones
+
+    return get_zones
 
 
 def orders_provider(settings: Settings) -> Callable[[str, OrderAssignRequest], OrderAssignResponse]:
