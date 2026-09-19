@@ -20,8 +20,10 @@ MAX_SPEED = 600
 
 class ClockActionRequest(BaseModel):
     action: ClockActionType
-    speed: int | None = Field(default=None, ge=MIN_SPEED, le=MAX_SPEED)
-    """Required for action='set_speed'."""
+    speed: int | None = Field(default=None, gt=0)
+    """Required for action='set_speed'. Clamped to [MIN_SPEED, MAX_SPEED] by
+    core/clock, not rejected - out-of-range values are a plan-stated clamp,
+    not a client error."""
     to: datetime | None = None
     """Required for action='jump'; clamped to [min_ts, max_ts] by core/clock."""
 
